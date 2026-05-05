@@ -1,40 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="theme-color" content="#080810"/>
-<title>Neural Budget</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap');
-:root{--bg:#080810;--sf:#0f0f1c;--s2:#141428;--bd:#1a1a2e;--b2:#242440;--tx:#dcdcf0;--mu:#4a4a6a;--m2:#6a6a8a;--gr:#00e896;--g2:rgba(0,232,150,.1);--rd:#ff3d5a;--r2:rgba(255,61,90,.1);--am:#ffaa00;--a2:rgba(255,170,0,.1);--pu:#9d7fff;--p2:rgba(157,127,255,.1);}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{background:var(--bg);color:var(--tx);font-family:'Cormorant Garamond',serif;min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:84px;overflow-x:hidden;}
-
-/* NAV */
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(8,8,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--b2);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
-.nb{flex:1;padding:11px 2px 13px;background:none;border:none;color:var(--mu);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;transition:color .2s;}
-.nb.on{color:var(--gr);}
-.ni{font-size:16px;}
-
-/* PAGES */
-.pg{display:none;padding:26px 17px 14px;}
-.pg.on{display:block;}
-.ey{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gr);margin-bottom:5px;}
-.pt{font-size:25px;font-weight:600;font-style:italic;line-height:1.25;margin-bottom:20px;}
-.card{background:var(--sf);border:1px solid var(--b2);border-radius:15px;padding:16px;margin-bottom:11px;}
-.ce{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:11px;}
-
-/* ONBOARD */
-.onboard{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
-.onboard.hidden{display:none;}
-.ob-wrap{max-width:380px;width:100%;}
-.ob-prog{height:2px;background:var(--bd);border-radius:2px;margin-bottom:28px;overflow:hidden;}
-.ob-bar{height:100%;background:var(--gr);border-radius:2px;transition:width .4s ease;}
-.ob-ey{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gr);margin-bottom:8px;}
-.ob-q{font-size:22px;font-style:italic;line-height:1.4;margin-bottom:6px;}
+content://downloads/all_downloads/1474.ob-q{font-size:22px;font-style:italic;line-height:1.4;margin-bottom:6px;}
 .ob-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);letter-spacing:.5px;line-height:1.6;margin-bottom:20px;}
 .ob-opts{display:flex;flex-direction:column;gap:8px;}
 .ob-opt{background:var(--sf);border:1px solid var(--b2);border-radius:11px;padding:14px 16px;color:var(--m2);font-family:'Cormorant Garamond',serif;font-size:16px;cursor:pointer;text-align:left;transition:all .15s;}
