@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#080810"/>
+<title>Neural Budget</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+:root{--bg:#080810;--sf:#0f0f1c;--s2:#141428;--bd:#1a1a2e;--b2:#242440;--tx:#dcdcf0;--mu:#4a4a6a;--m2:#6a6a8a;--gr:#00e896;--g2:rgba(0,232,150,.1);--rd:#ff3d5a;--r2:rgba(255,61,90,.1);--am:#ffaa00;--a2:rgba(255,170,0,.1);--pu:#9d7fff;--p2:rgba(157,127,255,.1);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--tx);font-family:'Cormorant Garamond',serif;min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:84px;overflow-x:hidden;}
+
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(8,8,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--b2);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
+.nb{flex:1;padding:10px 2px 12px;background:none;border:none;color:var(--mu);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:7px;letter-spacing:1px;transition:color .2s;}
+.nb.on{color:var(--gr);}
+.ni{font-size:15px;}
+.pg{display:none;padding:24px 17px 14px;}
+.pg.on{display:block;}
+.ey{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gr);margin-bottom:5px;}
+.pt{font-size:24px;font-weight:600;font-style:italic;line-height:1.25;margin-bottom:18px;}
+.card{background:var(--sf);border:1px solid var(--b2);border-radius:14px;padding:15px;margin-bottom:10px;}
+.ce{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:10px;}
+
+/* ONBOARD */
+.onboard{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
+.onboard.hidden{display:none;}
+.ob-wrap{max-width:380px;width:100%;}
+.ob-prog{height:2px;background:var(--bd);border-radius:2px;margin-bottom:26px;overflow:hidden;}
+.ob-bar{height:100%;background:var(--gr);border-radius:2px;transition:width .4s ease;}
+.ob-ey{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gr);margin-bottom:7px;}
+.ob-q{font-size:21px;font-style:italic;line-height:1.4;margin-bottom:5px;}
+.ob-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);line-height:1.6;margin-bottom:18px;}
+.ob-opts{display:flex;flex-direction:column;gap:7px;}
+.ob-opt{background:var(--sf);border:1px solid var(--b2);border-radius:10px;padding:13px 15px;color:var(--m2);font-family:'Cormorant Garamond',serif;font-size:15px;cursor:pointer;text-align:left;transition:all .15s;}
+.ob-opt.sel{border-color:var(--gr);background:var(--g2);color:var(--gr);}
+.ob-next{width:100%;padding:13px;background:var(--gr);color:var(--bg);border:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;cursor:pointer;margin-top:13px;}
+.ob-tf{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:14px;padding:12px;resize:none;outline:none;line-height:1.6;margin-bottom:6px;}
+.ob-tf::placeholder{color:var(--mu);}
+.ob-sv{font-family:'DM Mono',monospace;font-size:50px;font-weight:500;color:var(--gr);text-align:center;line-height:1;margin-bottom:4px;}
+.ob-rc{background:var(--sf);border:1px solid var(--b2);border-radius:12px;padding:14px;margin-bottom:9px;}
+.ob-re{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;margin-bottom:7px;}
+.ob-ri{font-size:13px;color:var(--m2);font-style:italic;padding:3px 0;border-bottom:1px solid var(--bd);line-height:1.5;}
+.ob-ri:last-child{border-bottom:none;}
+
+/* MODE SWITCHER */
+.mode-switcher{display:flex;background:var(--s2);border-radius:12px;padding:4px;margin-bottom:16px;border:1px solid var(--b2);}
+.mode-btn{flex:1;padding:10px 6px;border:none;background:transparent;border-radius:9px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;cursor:pointer;color:var(--mu);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.mode-btn.active-mode{background:var(--sf);color:var(--tx);box-shadow:0 1px 6px rgba(0,0,0,.4);}
+.mode-btn.active-mode.mirror-active{color:var(--gr);}
+.mode-btn.active-mode.quest-active{color:var(--pu);}
+.mode-icon{font-size:16px;}
+
+/* HOME MIRROR */
+.mirror-score{text-align:center;padding:24px 0 18px;}
+.ms-num{font-family:'DM Mono',monospace;font-size:72px;font-weight:500;line-height:1;letter-spacing:-3px;transition:color .4s;}
+.ms-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--mu);margin-top:5px;}
+.ms-phase{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 13px;border-radius:100px;border:1px solid var(--b2);background:var(--s2);}
+.ms-led{width:6px;height:6px;border-radius:50%;box-shadow:0 0 5px currentColor;}
+.ms-ptxt{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--m2);}
+.checkin-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px;}
+.ci-card{background:var(--sf);border:1px solid var(--b2);border-radius:11px;padding:11px 7px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.ci-card.done{border-color:var(--gr);background:var(--g2);}
+.ci-card.active-now{border-color:var(--am);background:var(--a2);}
+.ci-time{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--mu);margin-bottom:4px;}
+.ci-icon{font-size:18px;margin-bottom:3px;}
+.ci-status{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:1px;}
+.ci-check{position:absolute;top:5px;right:5px;width:12px;height:12px;border-radius:50%;background:var(--gr);display:none;align-items:center;justify-content:center;font-size:7px;color:var(--bg);}
+.ci-card.done .ci-check{display:flex;}
+.tap-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+.tap-btn{border-radius:15px;padding:18px 10px;border:1px solid var(--b2);background:var(--sf);cursor:pointer;text-align:center;transition:all .15s;}
+.tap-btn:active{transform:scale(.97);}
+.tap-icon{font-size:26px;margin-bottom:6px;}
+.tap-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;}
+.tap-sub{font-size:12px;color:var(--mu);font-style:italic;margin-top:3px;}
+
+/* SHEET */
+.sheet-overlay{position:fixed;inset:0;background:rgba(8,8,16,.85);backdrop-filter:blur(10px);z-index:150;display:none;flex-direction:column;justify-content:flex-end;}
+.sheet-overlay.open{display:flex;}
+.sheet{background:var(--sf);border-radius:20px 20px 0 0;border-top:1px solid var(--b2);padding:17px 16px 32px;max-height:70vh;overflow-y:auto;}
+.sheet-handle{width:34px;height:3px;background:var(--b2);border-radius:3px;margin:0 auto 15px;}
+.sheet-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;margin-bottom:12px;}
+.act-list{display:flex;flex-direction:column;gap:6px;}
+.act-item{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;border-radius:10px;background:var(--s2);border:1px solid var(--b2);cursor:pointer;transition:all .15s;}
+.act-item:active{transform:scale(.98);}
+.act-name{font-size:15px;color:var(--tx);}
+.act-pts-tag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:5px;}
+.sheet-close{width:100%;padding:11px;background:transparent;border:1px solid var(--b2);border-radius:10px;color:var(--mu);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-top:12px;}
+
+/* CEREMONY */
+.ceremony-overlay{position:fixed;inset:0;background:rgba(8,8,16,.96);backdrop-filter:blur(16px);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center;}
+.ceremony-overlay.open{display:flex;}
+.cer-score{font-family:'DM Mono',monospace;font-size:68px;font-weight:500;line-height:1;letter-spacing:-2px;margin-bottom:7px;}
+.cer-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--mu);margin-bottom:18px;}
+.cer-streak{font-family:'DM Mono',monospace;font-size:12px;color:var(--am);margin-bottom:7px;letter-spacing:1px;}
+.cer-msg{font-size:17px;font-style:italic;color:var(--m2);line-height:1.6;max-width:270px;margin-bottom:26px;}
+.cer-btn{padding:13px 32px;background:var(--gr);color:var(--bg);border:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;cursor:pointer;}
+
+/* CHECKIN MODAL */
+.ci-modal{position:fixed;inset:0;background:rgba(8,8,16,.92);backdrop-filter:blur(14px);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:22px;}
+.ci-modal.open{display:flex;}
+.ci-box{background:var(--sf);border:1px solid var(--b2);border-radius:17px;padding:24px 19px;max-width:380px;width:100%;}
+.ci-box-ey{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;margin-bottom:7px;}
+.ci-box-q{font-size:19px;font-style:italic;line-height:1.4;margin-bottom:16px;}
+.ci-box-opts{display:flex;flex-direction:column;gap:7px;}
+.ci-box-opt{background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:12px 14px;color:var(--m2);font-family:'Cormorant Garamond',serif;font-size:15px;cursor:pointer;text-align:left;transition:all .15s;}
+.ci-box-opt:hover{border-color:var(--gr);background:var(--g2);color:var(--gr);}
+.ci-skip{width:100%;padding:10px;background:transparent;border:none;color:var(--mu);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-top:7px;}
+
+/* MISSION */
+.am-strip{background:linear-gradient(135deg,rgba(0,232,150,.1),rgba(77,184,255,.06));border:1px solid rgba(0,232,150,.25);border-radius:11px;padding:11px 13px;margin-bottom:10px;display:none;cursor:pointer;}
+.am-ey{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--gr);margin-bottom:3px;display:flex;align-items:center;gap:4px;}
+.am-pulse{width:5px;height:5px;border-radius:50%;background:var(--gr);animation:pd 1.5s ease-in-out infinite;}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ===== QUEST SYSTEM ===== */
+.quest-home-strip{background:linear-gradient(135deg,rgba(157,127,255,.08),rgba(0,232,150,.06));border:1px solid rgba(157,127,255,.2);border-radius:13px;padding:14px;margin-bottom:10px;cursor:pointer;display:none;}
+.qhs-ey{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--pu);margin-bottom:5px;}
+.qhs-name{font-size:16px;font-weight:600;margin-bottom:3px;}
+.qhs-step{font-size:13px;color:var(--m2);font-style:italic;margin-bottom:10px;}
+.qhs-bar{height:3px;background:var(--bd);border-radius:3px;overflow:hidden;}
+.qhs-fill{height:100%;background:linear-gradient(90deg,var(--pu),var(--gr));border-radius:3px;transition:width .5s ease;}
+.quest-new-btn{width:100%;padding:15px;background:transparent;border:1px solid rgba(157,127,255,.3);border-radius:13px;color:var(--pu);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-bottom:12px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.quest-new-btn:hover{background:var(--p2);}
+
+/* QUEST CARDS */
+.quest-card{background:var(--sf);border:1px solid var(--b2);border-radius:14px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
+.quest-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0;}
+.quest-card.active-q::before{background:linear-gradient(90deg,var(--pu),var(--gr));}
+.quest-card.done-q::before{background:var(--am);}
+.quest-card.paused-q::before{background:var(--mu);}
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.q-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;padding:3px 7px;border-radius:4px;}
+.q-pct{font-family:'DM Mono',monospace;font-size:11px;}
+.q-name{font-size:18px;font-weight:600;margin-bottom:3px;line-height:1.3;}
+.q-desc{font-size:13px;color:var(--m2);font-style:italic;line-height:1.5;margin-bottom:12px;}
+.q-prog{height:3px;background:var(--bd);border-radius:3px;margin-bottom:12px;overflow:hidden;}
+.q-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--pu),var(--gr));transition:width .5s ease;}
+
+/* CURRENT STEP */
+.q-current{background:var(--s2);border-radius:10px;padding:13px;margin-bottom:10px;}
+.qc-ey{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--mu);margin-bottom:5px;}
+.qc-step{font-size:16px;font-weight:600;margin-bottom:3px;line-height:1.3;}
+.qc-detail{font-size:13px;color:var(--m2);font-style:italic;line-height:1.5;margin-bottom:11px;}
+.qc-actions{display:flex;gap:7px;}
+.qc-done{flex:2;padding:11px;background:var(--gr);color:var(--bg);border:none;border-radius:9px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:1.5px;cursor:pointer;}
+.qc-later{flex:1;padding:11px;background:transparent;border:1px solid var(--b2);border-radius:9px;color:var(--mu);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;}
+
+/* STEPS LIST */
+.q-steps{margin-top:10px;}
+.q-step-item{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--bd);}
+.q-step-item:last-child{border-bottom:none;}
+.q-step-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;margin-top:2px;}
+.q-step-dot.done-dot{background:var(--gr);border-color:var(--gr);color:var(--bg);}
+.q-step-dot.cur-dot{background:var(--am);border-color:var(--am);color:var(--bg);}
+.q-step-dot.lock-dot{background:transparent;border-color:var(--bd);}
+.q-step-label{font-size:13px;line-height:1.4;flex:1;}
+.q-step-label.done-lbl{color:var(--mu);text-decoration:line-through;}
+.q-step-label.cur-lbl{color:var(--tx);}
+.q-step-label.lock-lbl{color:var(--mu);opacity:.5;}
+.q-step-pts{font-family:'DM Mono',monospace;font-size:8px;color:var(--gr);flex-shrink:0;margin-top:3px;}
+.q-card-actions{display:flex;gap:7px;margin-top:12px;}
+.q-card-btn{flex:1;padding:9px 6px;border-radius:8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;border:1px solid var(--b2);background:var(--s2);color:var(--mu);transition:all .15s;text-align:center;}
+.q-card-btn.q-pause{border-color:var(--am);color:var(--am);}
+.q-card-btn.q-abandon{border-color:rgba(255,61,90,.3);color:rgba(255,61,90,.5);}
+
+/* NEW QUEST MODAL */
+.nq-overlay{position:fixed;inset:0;background:rgba(8,8,16,.95);backdrop-filter:blur(14px);z-index:250;display:none;flex-direction:column;align-items:center;padding:20px;overflow-y:auto;}
+.nq-overlay.open{display:flex;}
+.nq-box{background:var(--sf);border:1px solid var(--b2);border-radius:17px;padding:22px 19px;max-width:390px;width:100%;margin-top:10px;}
+.nq-ey{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--pu);margin-bottom:7px;}
+.nq-title{font-size:21px;font-style:italic;margin-bottom:18px;}
+.nq-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:7px;display:block;}
+.nq-input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:15px;padding:11px 12px;outline:none;margin-bottom:14px;}
+.nq-input::placeholder{color:var(--mu);}
+.nq-tf{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:14px;padding:11px 12px;resize:none;outline:none;line-height:1.6;margin-bottom:14px;}
+.nq-tf::placeholder{color:var(--mu);}
+.nq-templates{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.nq-temp{background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:12px 13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:9px;}
+.nq-temp:hover{border-color:var(--pu);background:var(--p2);}
+.nq-t-icon{font-size:19px;flex-shrink:0;}
+.nq-t-info{flex:1;}
+.nq-t-name{font-size:15px;color:var(--tx);margin-bottom:2px;}
+.nq-t-desc{font-family:'DM Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.5px;}
+.nq-close{width:100%;padding:11px;background:transparent;border:1px solid var(--b2);border-radius:9px;color:var(--mu);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-top:7px;}
+
+/* STEP CELEBRATION */
+.step-cel{position:fixed;inset:0;background:rgba(8,8,16,.94);backdrop-filter:blur(16px);z-index:350;display:none;flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center;}
+.step-cel.open{display:flex;}
+.step-cel-icon{font-size:50px;margin-bottom:14px;}
+.step-cel-title{font-size:21px;font-style:italic;margin-bottom:7px;}
+.step-cel-pts{font-family:'DM Mono',monospace;font-size:13px;color:var(--gr);margin-bottom:6px;letter-spacing:1px;}
+.step-cel-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:1px;line-height:1.7;margin-bottom:16px;}
+.step-cel-next{font-size:14px;color:var(--m2);font-style:italic;max-width:260px;line-height:1.6;margin-bottom:22px;}
+.step-cel-btn{padding:12px 30px;background:var(--gr);color:var(--bg);border:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;cursor:pointer;}
+
+/* DEPTH */
+.slbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;margin:14px 0 7px;}
+.ag{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.ab{background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:10px 9px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:12px;line-height:1.3;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:4px;transition:all .15s;position:relative;min-height:60px;}
+.ap{font-family:'DM Mono',monospace;font-size:9px;}
+.abg{position:absolute;top:5px;right:5px;width:15px;height:15px;border-radius:50%;font-family:'DM Mono',monospace;font-size:8px;font-weight:500;display:none;align-items:center;justify-content:center;color:var(--bg);}
+.ab.co{border-color:var(--rd);background:var(--r2);color:var(--rd);}
+.ab.co .abg{display:flex;background:var(--rd);}
+.ab.bo{border-color:var(--gr);background:var(--g2);color:var(--gr);}
+.ab.bo .abg{display:flex;background:var(--gr);}
+.new-tag{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:1px;background:var(--pu);color:var(--bg);padding:1px 4px;border-radius:3px;display:inline-block;width:fit-content;}
+.tf{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:14px;padding:10px 12px;resize:none;outline:none;line-height:1.6;}
+.tf::placeholder{color:var(--mu);}
+.pbtn{width:100%;padding:13px;background:var(--gr);color:var(--bg);border:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;cursor:pointer;margin-top:10px;}
+.gbtn{width:100%;padding:11px;background:transparent;border:1px solid var(--b2);border-radius:10px;color:var(--m2);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-top:6px;}
+.dbtn{width:100%;padding:11px;background:transparent;border:1px solid rgba(255,61,90,.25);border-radius:10px;color:rgba(255,61,90,.5);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-top:6px;}
+
+/* COACH */
+.move-card{background:var(--sf);border:1px solid var(--b2);border-radius:12px;padding:14px;margin-bottom:8px;position:relative;overflow:hidden;}
+.move-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.hi::before{background:var(--gr);}
+.md::before{background:var(--am);}
+.lo::before{background:var(--pu);}
+.move-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.move-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;padding:3px 7px;border-radius:4px;}
+.move-pts{font-family:'DM Mono',monospace;font-size:11px;color:var(--gr);}
+.move-title{font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.3;}
+.move-why{font-size:13px;color:var(--m2);font-style:italic;line-height:1.6;margin-bottom:7px;}
+.move-effect{background:var(--s2);border-radius:7px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--mu);line-height:1.7;}
+.move-actions{display:flex;gap:7px;margin-top:8px;}
+.move-btn{flex:1;padding:9px 7px;border-radius:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--b2);background:var(--s2);color:var(--mu);transition:all .15s;}
+.move-btn.take{border-color:var(--gr);color:var(--gr);background:var(--g2);}
+
+/* DATA */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+.sc{background:var(--sf);border:1px solid var(--b2);border-radius:11px;padding:12px;text-align:center;}
+.sv2{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;margin-bottom:3px;}
+.sk2{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--mu);}
+canvas{display:block;width:100%!important;}
+.strow{display:flex;gap:4px;flex-wrap:wrap;}
+.sd{width:29px;height:29px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid var(--bd);font-family:'DM Mono',monospace;color:var(--mu);}
+.sd span{font-size:6px;}
+.sd span:last-child{font-size:7px;font-weight:500;}
+.sd.G{background:var(--g2);border-color:var(--gr);color:var(--gr);}
+.sd.R{background:var(--r2);border-color:var(--rd);color:var(--rd);}
+.sd.N{background:var(--a2);border-color:var(--am);color:var(--am);}
+.hi2{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd);gap:8px;}
+.hi2:last-child{border-bottom:none;}
+.hd{font-family:'DM Mono',monospace;font-size:8px;color:var(--mu);margin-bottom:2px;}
+.ha{font-size:12px;color:var(--tx);line-height:1.4;}
+.hn{font-size:11px;color:var(--mu);font-style:italic;margin-top:2px;}
+.hs{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;flex-shrink:0;}
+
+/* SETTINGS */
+.api-input{width:100%;background:var(--s2);border:1px solid rgba(157,127,255,.3);border-radius:9px;color:var(--tx);font-family:'DM Mono',monospace;font-size:11px;padding:11px 12px;outline:none;letter-spacing:.5px;}
+.api-input::placeholder{color:var(--mu);}
+.rl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);display:block;margin:11px 0 6px;}
+.er{display:flex;gap:5px;align-items:center;margin-bottom:5px;}
+.er input[type=text]{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 10px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:13px;outline:none;}
+.er input[type=number]{width:48px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 5px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;outline:none;}
+.add-row{display:flex;gap:5px;margin-top:7px;}
+.add-row input[type=text]{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 10px;color:var(--tx);font-family:'Cormorant Garamond',serif;font-size:13px;outline:none;}
+.add-row input[type=number]{width:48px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 5px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;outline:none;}
+.add-btn{padding:8px 11px;background:var(--gr);color:var(--bg);border:none;border-radius:7px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;}
+.del-btn{background:none;border:none;color:var(--mu);cursor:pointer;font-size:15px;padding:0 3px;flex-shrink:0;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--m2);letter-spacing:.5px;}
+.toggle{width:38px;height:20px;background:var(--bd);border-radius:10px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle.on{background:var(--gr);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;background:var(--tx);border-radius:50%;transition:left .2s;}
+.toggle.on::after{left:21px;background:var(--bg);}
+
+/* WEEKLY CHECKIN */
+.cko{position:fixed;inset:0;background:rgba(8,8,16,.97);backdrop-filter:blur(14px);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.cko.open{display:flex;}
+.ckb{background:var(--sf);border:1px solid var(--b2);border-radius:16px;padding:22px 18px;max-width:380px;width:100%;}
+.ckq{font-size:18px;font-style:italic;line-height:1.45;margin-bottom:14px;}
+.cko-opts{display:flex;flex-direction:column;gap:6px;}
+.cko-opt{background:var(--s2);border:1px solid var(--b2);border-radius:9px;padding:11px 12px;color:var(--m2);font-family:'Cormorant Garamond',serif;font-size:14px;cursor:pointer;text-align:left;transition:all .15s;}
+.cko-opt:hover{border-color:var(--gr);background:var(--g2);color:var(--gr);}
+
+/* TOAST */
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:var(--gr);color:var(--bg);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;padding:10px 20px;border-radius:100px;z-index:400;white-space:nowrap;max-width:90vw;text-align:center;transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.err{background:var(--rd);}
+.toast.pu{background:var(--pu);}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- WEEKLY CHECKIN -->
+<div id="cko" class="cko">
+  <div class="ckb">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--pu);margin-bottom:5px">WEEKLY RECALIBRATION</div>
+    <div style="font-size:20px;font-style:italic;margin-bottom:14px">Time to recalibrate.</div>
+    <div id="cksteps"></div>
+  </div>
+</div>
+
+<!-- ONBOARD -->
+<div id="onboard" class="onboard">
+  <div class="ob-wrap">
+    <div class="ob-prog"><div class="ob-bar" id="ob-bar" style="width:0%"></div></div>
+    <div id="ob-content"></div>
+  </div>
+</div>
+
+<!-- QUICK LOG SHEET -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheetOut(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheet-title">LOG AN ACTIVITY</div>
+    <div class="act-list" id="sheet-acts"></div>
+    <button class="sheet-close" onclick="closeSheetDirect()">CLOSE</button>
+  </div>
+</div>
+
+<!-- LOG CEREMONY -->
+<div class="ceremony-overlay" id="ceremony">
+  <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gr);margin-bottom:14px">DAY LOCKED IN</div>
+  <div class="cer-score" id="cer-score">+0</div>
+  <div class="cer-lbl">NET DOPAMINE POINTS</div>
+  <div class="cer-streak" id="cer-streak"></div>
+  <div class="cer-msg" id="cer-msg"></div>
+  <button class="cer-btn" onclick="closeCeremony()">BACK TO MIRROR →</button>
+</div>
+
+<!-- CHECKIN MODAL -->
+<div class="ci-modal" id="ci-modal">
+  <div class="ci-box">
+    <div class="ci-box-ey" id="ci-box-ey" style="color:var(--am)">CHECK-IN</div>
+    <div class="ci-box-q" id="ci-box-q"></div>
+    <div class="ci-box-opts" id="ci-box-opts"></div>
+    <button class="ci-skip" onclick="skipCI()">Skip for now</button>
+  </div>
+</div>
+
+<!-- STEP CELEBRATION -->
+<div class="step-cel" id="step-cel">
+  <div class="step-cel-icon" id="scel-icon">✓</div>
+  <div class="step-cel-title" id="scel-title">Step complete.</div>
+  <div class="step-cel-pts" id="scel-pts"></div>
+  <div class="step-cel-sub" id="scel-sub"></div>
+  <div class="step-cel-next" id="scel-next"></div>
+  <button class="step-cel-btn" onclick="closeStepCel()">KEEP GOING →</button>
+</div>
+
+<!-- NEW QUEST MODAL -->
+<div class="nq-overlay" id="nq-overlay">
+  <div class="nq-box">
+    <div class="nq-ey">NEW QUEST</div>
+    <div class="nq-title">What are you building toward?</div>
+    <label class="nq-lbl">NAME YOUR QUEST</label>
+    <input class="nq-input" id="nq-name" placeholder="e.g. Get My Driver's License, My Road to Freedom..."/>
+    <label class="nq-lbl">WHAT'S THIS ABOUT? (optional)</label>
+    <textarea class="nq-tf" id="nq-desc" rows="2" placeholder="Brief description in your own words..."></textarea>
+    <label class="nq-lbl">OR START FROM A TEMPLATE</label>
+    <div class="nq-templates" id="nq-templates"></div>
+    <button class="ob-next" style="background:var(--pu);letter-spacing:2px" onclick="createQuest()">CREATE THIS QUEST →</button>
+    <button class="nq-close" onclick="closeNQ()">CANCEL</button>
+  </div>
+</div>
+
+<!-- PAGE: HOME -->
+<div id="pg-home" class="pg on">
+  <div class="ey" id="home-ey">NEURAL BUDGET</div>
+  <!-- MODE SWITCHER -->
+  <div class="mode-switcher">
+    <button class="mode-btn active-mode mirror-active" id="mode-mirror-btn" onclick="setMode('mirror',this)">
+      <span class="mode-icon">◎</span>MIRROR
+    </button>
+    <button class="mode-btn" id="mode-quest-btn" onclick="setMode('quest',this)">
+      <span class="mode-icon">⬡</span>QUEST
+    </button>
+  </div>
+
+  <!-- MIRROR MODE -->
+  <div id="mirror-mode">
+    <div class="mirror-score">
+      <div class="ms-num" id="ms-num" style="color:var(--mu)">+0</div>
+      <div class="ms-lbl">TODAY'S NET SCORE</div>
+      <div class="ms-phase">
+        <div class="ms-led" id="ms-led" style="background:var(--mu);color:var(--mu)"></div>
+        <div class="ms-ptxt" id="ms-ptxt">Tap to start your day</div>
+      </div>
+    </div>
+    <div class="checkin-strip" id="checkin-strip"></div>
+    <div class="am-strip" id="am-strip" onclick="completeMission()">
+      <div class="am-ey"><div class="am-pulse"></div>ACTIVE MOVE</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px" id="am-title"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--mu)">Tap to mark done</div>
+    </div>
+    <div class="tap-row">
+      <button class="tap-btn" style="border-color:rgba(255,61,90,.3)" onclick="openSheet('cost')">
+        <div class="tap-icon">⬇</div>
+        <div class="tap-label" style="color:var(--rd)">COST</div>
+        <div class="tap-sub">Something drained you</div>
+      </button>
+      <button class="tap-btn" style="border-color:rgba(0,232,150,.3)" onclick="openSheet('build')">
+        <div class="tap-icon">⬆</div>
+        <div class="tap-label" style="color:var(--gr)">BUILD</div>
+        <div class="tap-sub">Something grew you</div>
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px">
+      <div style="background:var(--sf);border:1px solid var(--b2);border-radius:9px;padding:10px 5px;text-align:center">
+        <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--gr);margin-bottom:2px" id="h-bpts">0</div>
+        <div style="font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--mu)">BUILD</div>
+      </div>
+      <div style="background:var(--sf);border:1px solid var(--b2);border-radius:9px;padding:10px 5px;text-align:center">
+        <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--rd);margin-bottom:2px" id="h-cpts">0</div>
+        <div style="font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--mu)">COST</div>
+      </div>
+      <div style="background:var(--sf);border:1px solid var(--b2);border-radius:9px;padding:10px 5px;text-align:center">
+        <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--pu);margin-bottom:2px" id="h-budg">35</div>
+        <div style="font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--mu)">BUDGET</div>
+      </div>
+    </div>
+    <button class="pbtn" onclick="lockInDay()" style="background:var(--sf);color:var(--gr);border:1px solid rgba(0,232,150,.3)">LOCK IN TODAY →</button>
+  </div>
+
+  <!-- QUEST MODE HOME -->
+  <div id="quest-mode" style="display:none">
+    <div id="quest-home-strip"></div>
+    <button class="quest-new-btn" onclick="openNQ()">＋ START A NEW QUEST</button>
+    <div id="quest-list-home"></div>
+  </div>
+</div>
+
+<!-- PAGE: LOG -->
+<div id="pg-log" class="pg">
+  <div class="ey">FULL TRACKER</div>
+  <div class="pt">Log everything</div>
+  <div class="slbl" style="color:var(--rd)">⬇ COST — tap each time</div>
+  <div class="ag" id="cgrid"></div>
+  <div class="slbl" style="color:var(--gr)">⬆ BUILD — tap each time</div>
+  <div class="ag" id="bgrid"></div>
+  <textarea class="tf" id="daynote" rows="2" style="margin-top:14px" placeholder="One honest sentence about today..."></textarea>
+  <button class="pbtn" onclick="lockInDay()">LOCK IN TODAY →</button>
+</div>
+
+<!-- PAGE: COACH -->
+<div id="pg-coach" class="pg">
+  <div class="ey">YOUR COACH</div>
+  <div class="pt">Possible next moves</div>
+  <div id="coach-body"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);padding:20px 0;text-align:center;line-height:1.8">Lock in at least one day to unlock your coach.</div></div>
+</div>
+
+<!-- PAGE: DATA -->
+<div id="pg-data" class="pg">
+  <div class="ey">YOUR DATA</div>
+  <div class="pt">The pattern over time</div>
+  <div class="sg" id="statgrid"></div>
+  <div class="card"><div class="ce">30-DAY NET SCORE</div><canvas id="chart" height="140"></canvas></div>
+  <div class="card"><div class="ce">STREAK — LAST 14 DAYS</div><div class="strow" id="strow"></div></div>
+  <div class="card"><div class="ce">LOG HISTORY</div><div id="hlist"></div></div>
+  <button class="gbtn" onclick="triggerCheckin()">↺ WEEKLY RECALIBRATION</button>
+</div>
+
+<!-- PAGE: SETTINGS -->
+<div id="pg-settings" class="pg">
+  <div class="ey">SETTINGS</div>
+  <div class="pt">Your setup</div>
+  <div class="card">
+    <div class="ce">UNLOCK AI FEATURES</div>
+    <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);line-height:1.8;margin-bottom:10px">Add your Anthropic API key to unlock AI coach moves. Free to start at console.anthropic.com → API Keys. Stored only on your device.</p>
+    <input class="api-input" type="password" id="api-key-input" placeholder="sk-ant-..." oninput="saveApiKey(this.value)"/>
+    <div id="api-status" style="font-family:'DM Mono',monospace;font-size:9px;margin-top:5px;letter-spacing:1px"></div>
+  </div>
+  <div class="card">
+    <div class="ce">DAILY BUDGET</div>
+    <div style="font-family:'DM Mono',monospace;font-size:46px;font-weight:500;color:var(--gr);line-height:1" id="bdisplay">35</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--mu);margin-top:2px;margin-bottom:12px">POINTS PER DAY</div>
+    <label class="rl">ADJUST</label>
+    <input type="range" min="20" max="80" value="35" id="bslider" oninput="setBudget(this.value)" style="accent-color:var(--gr);width:100%;cursor:pointer;"/>
+    <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--mu)">STRICT 20</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--mu)">RELAXED 80</span></div>
+  </div>
+  <div class="card">
+    <div class="ce">QUEST OPTIONS</div>
+    <div class="toggle-row">
+      <span class="toggle-lbl">Show all quest steps at once</span>
+      <button class="toggle" id="toggle-steps" onclick="toggleSetting('showAllSteps')"></button>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-lbl">Show quest strip on Mirror home</span>
+      <button class="toggle on" id="toggle-queststrip" onclick="toggleSetting('showQuestStrip')"></button>
+    </div>
+  </div>
+  <div class="card"><div class="ce">COST ACTIVITIES</div><div id="cost-editor"></div><div class="add-row"><input type="text" id="new-cost-name" placeholder="New cost activity..."/><input type="number" id="new-cost-pts" value="10" min="1" max="30"/><button class="add-btn" style="background:var(--rd)" onclick="addAct('cost')">+</button></div></div>
+  <div class="card"><div class="ce">BUILD ACTIVITIES</div><div id="build-editor"></div><div class="add-row"><input type="text" id="new-build-name" placeholder="New build activity..."/><input type="number" id="new-build-pts" value="10" min="1" max="30"/><button class="add-btn" onclick="addAct('build')">+</button></div></div>
+  <div class="card"><div class="ce">YOUR PROFILE</div><div id="profile-summary" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);line-height:2"></div></div>
+  <button class="gbtn" onclick="redoOnboard()">↺ REDO SETUP QUIZ</button>
+  <button class="dbtn" onclick="resetAll()">RESET ALL DATA</button>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nb on" onclick="goPage('home',this)"><span class="ni">◎</span>HOME</button>
+  <button class="nb" onclick="goPage('log',this)"><span class="ni">≡</span>LOG</button>
+  <button class="nb" onclick="goPage('coach',this)"><span class="ni">⬡</span>COACH</button>
+  <button class="nb" onclick="goPage('data',this)"><span class="ni">↗</span>DATA</button>
+  <button class="nb" onclick="goPage('settings',this)"><span class="ni">⚙</span>SETUP</button>
+</nav>
+
+<script>
+// ===== QUEST TEMPLATES =====
+const QUEST_TEMPLATES = [
+  {
+    icon:'🚗', name:"Get My Driver's License",
+    desc:"From zero to licensed — every step mapped out.",
+    steps:[
+      {label:"Research permit test requirements in your state", pts:8},
+      {label:"Study the driver's handbook", pts:10, repeat:true, repeatNote:"Do this daily until ready"},
+      {label:"Schedule your permit test appointment", pts:10},
+      {label:"Pass the permit test", pts:20},
+      {label:"Find a car to practice in", pts:8},
+      {label:"Log 10 hours of practice driving", pts:15, repeat:true, repeatNote:"Log each session"},
+      {label:"Research insurance rates", pts:8},
+      {label:"Schedule your driving test", pts:10},
+      {label:"Pass your driving test", pts:25},
+    ]
+  },
+  {
+    icon:'💰', name:"Build My Emergency Fund",
+    desc:"Save your first real financial cushion.",
+    steps:[
+      {label:"Calculate your monthly expenses", pts:8},
+      {label:"Set your emergency fund target", pts:7},
+      {label:"Open a separate savings account", pts:12},
+      {label:"Set up automatic transfer (even small)", pts:12},
+      {label:"Hit 25% of your target", pts:15},
+      {label:"Hit 50% of your target", pts:18},
+      {label:"Hit 75% of your target", pts:20},
+      {label:"Hit 100% — emergency fund complete", pts:30},
+    ]
+  },
+  {
+    icon:'🎬', name:"Grow My YouTube Channel",
+    desc:"From idea to consistent creator.",
+    steps:[
+      {label:"Define your channel niche and audience", pts:10},
+      {label:"Set up channel branding (name, art, description)", pts:12},
+      {label:"Script and film your first video", pts:15},
+      {label:"Edit and upload your first video", pts:15},
+      {label:"Post 5 videos consistently", pts:20, repeat:true, repeatNote:"Log each upload"},
+      {label:"Study your analytics — what's working?", pts:10},
+      {label:"Reach 100 subscribers", pts:20},
+      {label:"Post 10 videos consistently", pts:20},
+      {label:"Engage with your community regularly", pts:10, repeat:true},
+    ]
+  },
+  {
+    icon:'💪', name:"Build a Consistent Workout Habit",
+    desc:"Not a phase. A lifestyle.",
+    steps:[
+      {label:"Pick a workout style that fits your life", pts:8},
+      {label:"Set your schedule (days + times)", pts:8},
+      {label:"Complete your first week (3+ sessions)", pts:15},
+      {label:"Complete 30 days without quitting", pts:20},
+      {label:"Track your progress — note improvements", pts:10},
+      {label:"Complete 90 days", pts:30},
+    ]
+  },
+  {
+    icon:'📚', name:"Learn Something New",
+    desc:"A skill, a subject, a language — your choice.",
+    steps:[
+      {label:"Define exactly what you want to learn", pts:8},
+      {label:"Find your resources (course, book, mentor)", pts:10},
+      {label:"Complete your first study session", pts:10},
+      {label:"Study consistently for 2 weeks", pts:15, repeat:true},
+      {label:"Complete your first milestone or chapter", pts:15},
+      {label:"Apply what you've learned — do something with it", pts:20},
+      {label:"Reach your defined goal", pts:25},
+    ]
+  },
+  {
+    icon:'✏️', name:"Create Your Own Quest",
+    desc:"Name it yourself. Build the steps yourself.",
+    steps:[],
+    custom:true
+  }
+];
+
+// ===== ONBOARD =====
+const OBS=[
+  {type:'welcome'},
+  {type:'slider',id:'age',ey:'ABOUT YOU',q:'How old are you?',sub:'Sets your starting budget.',min:13,max:55,def:21,unit:'yrs'},
+  {type:'choice',id:'scroll',ey:'COST TRAPS',q:'Daily time scrolling or watching short videos?',sub:'Be honest.',opts:['Under 30 min','30–60 min','1–2 hours','2–4 hours','4+ hours']},
+  {type:'choice',id:'binge',ey:'COST TRAPS',q:'How often do you go 2+ hours straight on games, TV, or scrolling?',opts:['Rarely','Once a week','A few times a week','Most days','Every day']},
+  {type:'choice',id:'compulsive',ey:'COST TRAPS',q:'Do you have a compulsive habit you do even when you don\'t want to?',sub:'Whatever applies to you.',opts:['Not really','Occasionally','Yeah, a couple','It\'s a real pattern','It\'s my main drain']},
+  {type:'multi',id:'builds',ey:'BUILD ACTIVITIES',q:'Which of these do you actually do regularly?',sub:'Tap all that apply.',opts:['Exercise / working out','Reading books','Creating something','Deep study or learning','Meaningful in-person convos','Meditation or breathwork','Cold showers / fasting','Walking outside intentionally']},
+  {type:'text',id:'natural_high',ey:'BUILD ACTIVITIES',q:'What genuinely gives you energy or a sense of accomplishment?',sub:'After doing it you feel good — not just stimulated.',placeholder:'e.g. finishing a workout, a deep conversation, completing a project...'},
+  {type:'text',id:'biggest_trap',ey:'SELF AWARENESS',q:'The one thing you KNOW drains you but keep doing anyway?',sub:'This becomes your highest-cost activity on the tracker.',placeholder:'Be real with yourself...'},
+  {type:'slider',id:'discipline',ey:'SELF AWARENESS',q:'How disciplined do you feel right now?',sub:'Honest self-rating.',min:1,max:10,def:5,unit:'/10'},
+  {type:'results'}
+];
+let obStep=0,obA={};
+function startOB(){obStep=0;obA={};renderOB();}
+function renderOB(){
+  const s=OBS[obStep];
+  document.getElementById('ob-bar').style.width=((obStep/OBS.length)*100)+'%';
+  const c=document.getElementById('ob-content');
+  if(s.type==='welcome'){c.innerHTML=`<div style="text-align:center;padding:8px 0"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gr),var(--pu));margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:28px">🧠</div><div style="font-size:26px;font-style:italic;margin-bottom:8px">Neural Budget</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);line-height:1.9;letter-spacing:.5px;margin-bottom:22px">It doesn't tell you what to do.<br>It just makes sure you can't lie to yourself.<br><br>Two modes: <span style="color:var(--gr)">Mirror</span> for daily tracking,<br><span style="color:var(--pu)">Quest</span> for goal building.<br><br>Takes 2 minutes to set up.</div><button class="ob-next" onclick="obNext()">BUILD MY PROFILE →</button></div>`;return;}
+  if(s.type==='results'){buildOBResults(c);return;}
+  if(s.type==='slider'){const cur=obA[s.id]!==undefined?obA[s.id]:s.def;c.innerHTML=`<div class="ob-ey">${s.ey}</div><div class="ob-q">${s.q}</div>${s.sub?`<div class="ob-sub">${s.sub}</div>`:''}<div class="ob-sv" id="ob-sv">${cur}${s.unit}</div><div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);text-align:center;margin-bottom:18px">${s.min}${s.unit} — ${s.max}${s.unit}</div><input type="range" min="${s.min}" max="${s.max}" value="${cur}" style="width:100%;accent-color:var(--gr);cursor:pointer;margin-bottom:18px" oninput="obSl(this.value,'${s.id}','${s.unit}')"/><button class="ob-next" onclick="obNext()">NEXT →</button>`;if(obA[s.id]===undefined)obA[s.id]=s.def;return;}
+  if(s.type==='choice'){c.innerHTML=`<div class="ob-ey">${s.ey}</div><div class="ob-q">${s.q}</div>${s.sub?`<div class="ob-sub">${s.sub}</div>`:''}<div class="ob-opts">${s.opts.map(o=>`<button class="ob-opt ${obA[s.id]===o?'sel':''}" onclick="obCh('${s.id}',this,'${o.replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div>`;return;}
+  if(s.type==='multi'){const sel=obA[s.id]||[];c.innerHTML=`<div class="ob-ey">${s.ey}</div><div class="ob-q">${s.q}</div><div class="ob-sub">${s.sub}</div><div class="ob-opts">${s.opts.map(o=>`<button class="ob-opt ${sel.includes(o)?'sel':''}" onclick="obMu('${s.id}',this,'${o.replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div><button class="ob-next" onclick="obNext()">NEXT →</button>`;return;}
+  if(s.type==='text'){c.innerHTML=`<div class="ob-ey">${s.ey}</div><div class="ob-q">${s.q}</div>${s.sub?`<div class="ob-sub">${s.sub}</div>`:''}<textarea class="ob-tf" id="ob-tf" rows="3" placeholder="${s.placeholder||''}">${obA[s.id]||''}</textarea><button class="ob-next" onclick="obTxt('${s.id}')">NEXT →</button>`;return;}
+}
+function obSl(v,id,u){obA[id]=+v;const e=document.getElementById('ob-sv');if(e)e.textContent=v+u;}
+function obCh(id,btn,val){obA[id]=val;document.querySelectorAll('.ob-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');setTimeout(()=>obNext(),280);}
+function obMu(id,btn,val){if(!obA[id])obA[id]=[];const a=obA[id],i=a.indexOf(val);if(i>=0)a.splice(i,1);else a.push(val);btn.classList.toggle('sel',a.includes(val));}
+function obTxt(id){const e=document.getElementById('ob-tf');obA[id]=e?e.value.trim():'';obNext();}
+function obNext(){obStep++;if(obStep>=OBS.length)obStep=OBS.length-1;renderOB();}
+function buildOBResults(c){
+  const p=calcProfile(obA);
+  S.profile=p;S.budget=p.budget;S.cost=p.cost;S.build=p.build;S.onboarded=true;save();
+  c.innerHTML=`<div class="ob-ey">YOUR PROFILE IS READY</div><div class="ob-q" style="margin-bottom:5px">Here's what we built.</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);margin-bottom:16px;line-height:1.7">Everything is editable in Settings anytime.</div>
+  <div class="ob-rc"><div class="ob-re" style="color:var(--gr)">⬆ BUILD ACTIVITIES</div>${p.build.slice(0,4).map(a=>`<div class="ob-ri">+${a.pts} pts — ${a.name}</div>`).join('')}${p.build.length>4?`<div class="ob-ri" style="color:var(--mu)">+ ${p.build.length-4} more</div>`:''}</div>
+  <div class="ob-rc"><div class="ob-re" style="color:var(--rd)">⬇ COST ACTIVITIES</div>${p.cost.slice(0,4).map(a=>`<div class="ob-ri">-${a.pts} pts — ${a.name}</div>`).join('')}</div>
+  <div class="ob-rc"><div class="ob-re" style="color:var(--pu)">DAILY BUDGET: ${p.budget} pts/day</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);line-height:1.7;padding-top:3px">${p.budgetReason}</div></div>
+  <button class="ob-next" onclick="finishOB()">START TRACKING →</button>`;
+}
+function calcProfile(a){
+  const age=a.age||21,discipline=a.discipline||5;
+  let budget=age<18?30:age<22?35:age<28?40:45;
+  if(discipline<=3)budget-=5;else if(discipline>=8)budget+=5;
+  budget=Math.max(20,Math.min(70,budget));
+  const budgetReason=age<18?'Stricter budget — discipline now wires your brain for everything ahead.':age<25?'Still in the wiring phase. Tight budget trains your system to earn its rewards.':'Calibrated to your age and discipline level.';
+  const cost=[];let ci=1;
+  if(a.biggest_trap)cost.push({id:'c'+ci++,name:a.biggest_trap.substring(0,40),pts:18,isNew:false});
+  const smap={'Under 30 min':6,'30–60 min':9,'1–2 hours':11,'2–4 hours':14,'4+ hours':16};
+  cost.push({id:'c'+ci++,name:'Doomscrolling / short video',pts:smap[a.scroll]||9,isNew:false});
+  const bmap={'Rarely':5,'Once a week':7,'A few times a week':10,'Most days':13,'Every day':15};
+  cost.push({id:'c'+ci++,name:'Binge session (2h+ straight)',pts:bmap[a.binge]||9,isNew:false});
+  const cmap={'Not really':0,'Occasionally':6,'Yeah, a couple':10,'It\'s a real pattern':14,'It\'s my main drain':16};
+  const cp=cmap[a.compulsive]||0;
+  if(cp>0&&!a.biggest_trap)cost.push({id:'c'+ci++,name:'Compulsive habit / urge',pts:cp,isNew:false});
+  cost.push({id:'c'+ci++,name:'Junk food for comfort',pts:7,isNew:false});
+  cost.push({id:'c'+ci++,name:'Chasing validation',pts:9,isNew:false});
+  const build=[];let bi=1;
+  if(a.natural_high)build.push({id:'b'+bi++,name:a.natural_high.substring(0,40),pts:15,isNew:false});
+  const bpts={'Exercise / working out':14,'Reading books':10,'Creating something':13,'Deep study or learning':12,'Meaningful in-person convos':13,'Meditation or breathwork':9,'Cold showers / fasting':8,'Walking outside intentionally':7};
+  (a.builds||[]).forEach(b=>{if(!a.natural_high||!b.toLowerCase().includes((a.natural_high||'').toLowerCase().substring(0,8))){build.push({id:'b'+bi++,name:b,pts:bpts[b]||10,isNew:false});}});
+  if(!build.find(b=>b.name.toLowerCase().includes('exercise')))build.push({id:'b'+bi++,name:'Exercise / physical training',pts:14,isNew:false});
+  if(build.length<4)build.push({id:'b'+bi++,name:'Intentional walk outside',pts:7,isNew:false});
+  return{age,discipline,budget,budgetReason,cost:cost.slice(0,8),build:build.slice(0,8),naturalHigh:a.natural_high,biggestTrap:a.biggest_trap};
+}
+function finishOB(){document.getElementById('onboard').classList.add('hidden');document.querySelector('.nav').style.display='flex';document.getElementById('pg-home').classList.add('on');initApp();}
+function redoOnboard(){S.onboarded=false;save();document.querySelector('.nav').style.display='none';document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById('onboard').classList.remove('hidden');startOB();}
+
+// ===== STATE =====
+function defS(){return{onboarded:false,budget:35,apiKey:'',profile:{},cost:[],build:[],logs:[],today:{},activeMission:null,completedMissions:[],lastCheckin:null,checkins:{},quests:[],currentMode:'mirror',settings:{showAllSteps:false,showQuestStrip:true}};}
+let S=(()=>{try{const s=JSON.parse(localStorage.getItem('nb_q')||'null');return s?{...defS(),...s}:defS();}catch(e){return defS();}})();
+function save(){localStorage.setItem('nb_q',JSON.stringify(S));}
+
+// ===== INIT =====
+function initApp(){
+  document.getElementById('h-budg').textContent=S.budget;
+  setMode(S.currentMode||'mirror',document.getElementById('mode-'+(S.currentMode||'mirror')+'-btn'),true);
+  buildCheckinStrip();buildGrids();renderMission();calcScore();
+  applyToggles();
+}
+
+// ===== MODE SWITCHER =====
+function setMode(mode,btn,silent){
+  S.currentMode=mode;if(!silent)save();
+  document.querySelectorAll('.mode-btn').forEach(b=>{b.classList.remove('active-mode','mirror-active','quest-active');});
+  btn.classList.add('active-mode',mode+'-active');
+  document.getElementById('mirror-mode').style.display=mode==='mirror'?'block':'none';
+  document.getElementById('quest-mode').style.display=mode==='quest'?'block':'none';
+  if(mode==='quest')renderQuestHome();
+  if(mode==='mirror')renderQuestHomeStrip();
+}
+
+// ===== THREE CHECK-INS =====
+const CIC={
+  morning:{label:'MORNING',icon:'🌅',ey:'MORNING CHECK-IN',q:'How are you starting today?',opts:['Energized — ready to build','Neutral — we\'ll see','Low — just getting by']},
+  midday:{label:'MIDDAY',icon:'☀️',ey:'MIDDAY SNAPSHOT',q:'How\'s the day going so far?',opts:['On track — building','Neutral — nothing major','Slipping a bit']},
+  evening:{label:'EVENING',icon:'🌙',ey:'EVENING REFLECTION',q:'How did the day land?',opts:['Strong — stayed on course','Mixed — some good some not','Off — tomorrow is the reset']},
+};
+function getTimeOfDay(){const h=new Date().getHours();return h<12?'morning':h<17?'midday':'evening';}
+function getTodayKey(){return new Date().toISOString().split('T')[0];}
+function buildCheckinStrip(){
+  const strip=document.getElementById('checkin-strip');
+  const today=getTodayKey();const todayCI=S.checkins[today]||{};const now=getTimeOfDay();
+  strip.innerHTML=Object.entries(CIC).map(([key,cfg])=>{
+    const done=todayCI[key],isNow=key===now&&!done;
+    return`<div class="ci-card ${done?'done':isNow?'active-now':''}" onclick="openCI('${key}')"><div class="ci-check">✓</div><div class="ci-time">${cfg.label}</div><div class="ci-icon">${cfg.icon}</div><div class="ci-status" style="color:${done?'var(--gr)':isNow?'var(--am)':'var(--mu)'}">${done?'done':isNow?'TAP':'—'}</div></div>`;
+  }).join('');
+}
+function openCI(key){
+  const cfg=CIC[key];const today=getTodayKey();
+  if(S.checkins[today]?.[key]){showToast('Already checked in');return;}
+  document.getElementById('ci-box-ey').textContent=cfg.ey;
+  document.getElementById('ci-box-q').textContent=cfg.q;
+  document.getElementById('ci-box-opts').innerHTML=cfg.opts.map(o=>`<button class="ci-box-opt" onclick="logCI('${key}','${o.replace(/'/g,"\\'")}')">${o}</button>`).join('');
+  document.getElementById('ci-modal').classList.add('open');
+}
+function logCI(key,ans){
+  const today=getTodayKey();if(!S.checkins[today])S.checkins[today]={};
+  S.checkins[today][key]={ans,time:new Date().toISOString()};save();
+  document.getElementById('ci-modal').classList.remove('open');buildCheckinStrip();showToast(CIC[key].label+' logged ✓');
+}
+function skipCI(){document.getElementById('ci-modal').classList.remove('open');}
+
+// ===== QUICK LOG SHEET =====
+let sheetType='cost';
+function openSheet(type){
+  sheetType=type;const acts=type==='cost'?S.cost:S.build;
+  document.getElementById('sheet-title').textContent=type==='cost'?'WHAT COST YOU?':'WHAT BUILT YOU?';
+  document.getElementById('sheet-acts').innerHTML=acts.map(a=>`<div class="act-item ${type}-item" onclick="quickLog('${a.id}','${type}',${a.pts},'${a.name.replace(/'/g,"\\'")}')" ><span class="act-name">${a.name}</span><span class="act-pts-tag" style="background:${type==='cost'?'var(--r2)':'var(--g2)'};color:${type==='cost'?'var(--rd)':'var(--gr)'}">${type==='cost'?'-':'+'}${a.pts}</span></div>`).join('');
+  document.getElementById('sheet-overlay').classList.add('open');
+}
+function quickLog(id,type,pts,name){
+  S.today[id]=(S.today[id]||0)+1;save();calcScore();closeSheetDirect();
+  showToast(`${type==='cost'?'-':'+'}${pts} pts — ${name}`);
+}
+function closeSheetOut(e){if(e.target===document.getElementById('sheet-overlay'))closeSheetDirect();}
+function closeSheetDirect(){document.getElementById('sheet-overlay').classList.remove('open');}
+
+// ===== SCORE =====
+function calcScore(){
+  let b=0,c=0;
+  S.build.forEach(a=>{b+=(S.today[a.id]||0)*a.pts;});
+  S.cost.forEach(a=>{c+=(S.today[a.id]||0)*a.pts;});
+  const net=b-c;
+  const el=document.getElementById('ms-num');if(el){el.textContent=(net>=0?'+':'')+net;el.style.color=net>8?'var(--gr)':net<-8?'var(--rd)':'var(--am)';}
+  const hb=document.getElementById('h-bpts');if(hb)hb.textContent='+'+b;
+  const hc=document.getElementById('h-cpts');if(hc)hc.textContent='-'+c;
+  const led=document.getElementById('ms-led'),txt=document.getElementById('ms-ptxt');
+  if(led&&txt){
+    if(!b&&!c){led.style.cssText='background:var(--mu);color:var(--mu)';txt.textContent='Tap COST or BUILD to start';}
+    else if(net>=20){led.style.cssText='background:var(--gr);color:var(--gr)';txt.textContent='GROWTH DAY';}
+    else if(net>=0){led.style.cssText='background:var(--am);color:var(--am)';txt.textContent='SURPLUS';}
+    else if(net>=-12){led.style.cssText='background:var(--am);color:var(--am)';txt.textContent='NEUTRAL';}
+    else{led.style.cssText='background:var(--rd);color:var(--rd)';txt.textContent='DEFICIT';}
+  }
+  return{b,c,net};
+}
+
+// ===== LOCK IN DAY =====
+function lockInDay(){
+  let b=0,c=0,acts=[];
+  S.build.forEach(a=>{const n=S.today[a.id]||0;if(n>0){b+=n*a.pts;acts.push(a.name+(n>1?` ×${n}`:''));}});
+  S.cost.forEach(a=>{const n=S.today[a.id]||0;if(n>0){c+=n*a.pts;acts.push(a.name+(n>1?` ×${n}`:''));}});
+  const note=document.getElementById('daynote')?document.getElementById('daynote').value.trim():'';
+  if(!b&&!c){showToast('Log at least one activity first',true);return;}
+  const today=getTodayKey();const net=b-c;
+  const entry={date:today,build:b,cost:c,net,activities:acts.join(', '),note};
+  const idx=S.logs.findIndex(l=>l.date===today);
+  if(idx>=0)S.logs[idx]=entry;else S.logs.push(entry);
+  S.today={};if(document.getElementById('daynote'))document.getElementById('daynote').value='';
+  save();buildGrids();calcScore();buildCheckinStrip();
+  let streak=0;for(let i=S.logs.length-1;i>=0;i--){if(S.logs[i].net>=0)streak++;else break;}
+  document.getElementById('cer-score').textContent=(net>=0?'+':'')+net;
+  document.getElementById('cer-score').style.color=net>8?'var(--gr)':net<-8?'var(--rd)':'var(--am)';
+  document.getElementById('cer-streak').textContent=streak>1?`🔥 ${streak} day streak`:'';
+  const msgs=['That\'s a growth day. Your baseline moved.','Surplus. You stayed on course.','Neutral day — logged and honest. That counts.','Deficit logged. The mirror doesn\'t lie — tomorrow is a clean slate.'];
+  document.getElementById('cer-msg').textContent=net>=20?msgs[0]:net>=0?msgs[1]:net>=-12?msgs[2]:msgs[3];
+  document.getElementById('ceremony').classList.add('open');checkCKDue();
+}
+function closeCeremony(){document.getElementById('ceremony').classList.remove('open');}
+
+// ===== MISSION =====
+function renderMission(){
+  const b=document.getElementById('am-strip');if(!b)return;
+  if(!S.activeMission){b.style.display='none';return;}
+  b.style.display='block';document.getElementById('am-title').textContent=S.activeMission.title;
+}
+function completeMission(){
+  if(!S.activeMission)return;
+  S.completedMissions=S.completedMissions||[];
+  S.completedMissions.push({...S.activeMission,done:new Date().toISOString()});
+  const match=S.build.find(a=>a.id===S.activeMission.actId);
+  if(match){S.today[match.id]=(S.today[match.id]||0)+1;save();buildGrids();calcScore();}
+  showToast(`Move complete! +${S.activeMission.pts} pts ✓`);
+  S.activeMission=null;save();renderMission();
+}
+function takeMission(title,why,actId,pts,btn){
+  S.activeMission={title,why,actId,pts};save();renderMission();
+  showToast('Move locked in 🎯');const card=btn.closest('.move-card');if(card)card.style.borderColor='var(--gr)';
+  goPage('home',document.querySelector('.nb'));
+}
+function skipMove(btn){const c=btn.closest('.move-card');if(c){c.style.opacity='.35';c.style.pointerEvents='none';}}
+
+// ===== QUEST SYSTEM =====
+function renderQuestHome(){
+  renderQuestHomeStrip();
+  const list=document.getElementById('quest-list-home');
+  const active=S.quests.filter(q=>q.status!=='done');
+  const done=S.quests.filter(q=>q.status==='done');
+  if(!S.quests.length){list.innerHTML=`<div style="text-align:center;padding:28px 20px"><div style="font-size:36px;margin-bottom:12px">⬡</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);line-height:1.8;letter-spacing:.5px">No quests yet.<br>Start one above — name it yourself<br>or use a template as a starting point.</div></div>`;return;}
+
+  // Awareness note if many started
+  const startedThisWeek=S.quests.filter(q=>{const d=new Date(q.createdAt);return(Date.now()-d.getTime())<7*864e5;}).length;
+  let note='';
+  if(startedThisWeek>=3&&active.length>=3)note=`<div style="background:var(--a2);border:1px solid rgba(255,170,0,.2);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:10px;color:var(--am);line-height:1.7">You've started ${startedThisWeek} quests this week — ${active.length} still in progress. That's not a problem, just something to see. No pressure either way.</div>`;
+
+  list.innerHTML=note+active.map(q=>renderQuestCard(q)).join('')+(done.length?`<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin:14px 0 8px">COMPLETED</div>`+done.map(q=>renderQuestCard(q)).join(''):'');
+}
+
+function renderQuestHomeStrip(){
+  const strip=document.getElementById('quest-home-strip');if(!strip)return;
+  if(!S.settings?.showQuestStrip){strip.style.display='none';return;}
+  const active=S.quests.find(q=>q.status==='active');
+  if(!active){strip.style.display='none';return;}
+  const done=active.steps.filter(s=>s.done).length;
+  const pct=Math.round((done/active.steps.length)*100);
+  const currentStep=active.steps.find(s=>!s.done);
+  strip.style.display='block';
+  strip.innerHTML=`<div class="qhs-ey">ACTIVE QUEST</div><div class="qhs-name">${active.icon||'⬡'} ${active.name}</div><div class="qhs-step">${currentStep?'Next: '+currentStep.label:'All steps complete!'}</div><div class="qhs-bar"><div class="qhs-fill" style="width:${pct}%"></div></div>`;
+  strip.onclick=()=>{setMode('quest',document.getElementById('mode-quest-btn'));};
+}
+
+function renderQuestCard(q){
+  const totalSteps=q.steps.length;
+  const doneSteps=q.steps.filter(s=>s.done).length;
+  const pct=totalSteps?Math.round((doneSteps/totalSteps)*100):0;
+  const currentStep=q.steps.find(s=>!s.done);
+  const statusColor={active:'var(--pu)',paused:'var(--mu)',done:'var(--am)'}[q.status]||'var(--mu)';
+  const statusLabel={active:'IN PROGRESS',paused:'PAUSED',done:'COMPLETED'}[q.status]||q.status.toUpperCase();
+  const showAll=S.settings?.showAllSteps;
+
+  const stepsHtml=showAll
+    ?`<div class="q-steps">${q.steps.map((s,i)=>{const isDone=s.done;const isCur=!isDone&&i===q.steps.findIndex(x=>!x.done);return`<div class="q-step-item"><div class="q-step-dot ${isDone?'done-dot':isCur?'cur-dot':'lock-dot'}">${isDone?'✓':isCur?'→':''}</div><div class="q-step-label ${isDone?'done-lbl':isCur?'cur-lbl':'lock-lbl'}">${s.label}${s.repeat&&!isDone?`<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mu);margin-top:2px">${s.repeatNote||'Repeating step'}</div>`:''}</div><div class="q-step-pts">+${s.pts}</div></div>`}).join('')}</div>`
+    :'';
+
+  return`<div class="quest-card ${q.status}-q">
+    <div class="q-meta">
+      <span class="q-tag" style="background:${statusColor}22;color:${statusColor}">${statusLabel}</span>
+      <span class="q-pct" style="color:${statusColor}">${pct}%</span>
+    </div>
+    <div class="q-name">${q.icon||'⬡'} ${q.name}</div>
+    ${q.desc?`<div class="q-desc">${q.desc}</div>`:''}
+    <div class="q-prog"><div class="q-prog-fill" style="width:${pct}%"></div></div>
+    ${q.status==='active'&&currentStep?`<div class="q-current">
+      <div class="qc-ey">NEXT STEP — ${doneSteps+1} of ${totalSteps}</div>
+      <div class="qc-step">${currentStep.label}</div>
+      ${currentStep.repeatNote?`<div class="qc-detail">${currentStep.repeatNote}</div>`:''}
+      <div class="qc-actions">
+        <button class="qc-done" onclick="completeQuestStep('${q.id}')">DONE ✓ +${currentStep.pts} pts</button>
+        <button class="qc-later" onclick="">Later</button>
+      </div>
+    </div>`:''}
+    ${stepsHtml}
+    ${q.status!=='done'?`<div class="q-card-actions">
+      <button class="q-card-btn q-pause" onclick="pauseQuest('${q.id}')">${q.status==='paused'?'▶ RESUME':'⏸ PAUSE'}</button>
+      <button class="q-card-btn q-abandon" onclick="abandonQuest('${q.id}')">✕ ABANDON</button>
+    </div>`:`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--am);text-align:center;padding:10px 0">🏆 Quest Complete</div>`}
+  </div>`;
+}
+
+function completeQuestStep(qid){
+  const quest=S.quests.find(q=>q.id===qid);if(!quest)return;
+  const stepIdx=quest.steps.findIndex(s=>!s.done);if(stepIdx<0)return;
+  const step=quest.steps[stepIdx];
+  step.done=true;step.doneAt=new Date().toISOString();
+  // Handle repeating — re-add a copy of this step at the end if repeat
+  if(step.repeat){
+    quest.steps.push({...step,done:false,doneAt:null,id:'r'+Date.now()});
+  }
+  // Log pts to today
+  const allDone=quest.steps.filter(s=>!s.repeat).every(s=>s.done);
+  if(allDone)quest.status='done';
+  save();
+  // Step celebration
+  const isQuestDone=quest.status==='done';
+  const nextStep=quest.steps.find(s=>!s.done);
+  document.getElementById('scel-icon').textContent=isQuestDone?'🏆':'✓';
+  document.getElementById('scel-title').textContent=isQuestDone?`${quest.name} — Complete!`:'Step done.';
+  document.getElementById('scel-pts').textContent=`+${step.pts} build points added`;
+  document.getElementById('scel-sub').textContent=isQuestDone?`You finished all ${quest.steps.filter(s=>!s.repeat).length} steps. That's real.`:`${quest.steps.filter(s=>s.done&&!s.repeat).length} of ${quest.steps.filter(s=>!s.repeat).length} steps complete`;
+  document.getElementById('scel-next').textContent=isQuestDone?'Start a new quest or keep going on another one.':(nextStep?`Up next: ${nextStep.label}`:'All steps complete!');
+  document.getElementById('step-cel').classList.add('open');
+  // Add pts to today
+  const highBuild=S.build.reduce((a,b)=>a.pts>b.pts?a:b,S.build[0]);
+  if(highBuild){S.today[highBuild.id]=(S.today[highBuild.id]||0)+Math.floor(step.pts/highBuild.pts||1);save();calcScore();}
+}
+
+function closeStepCel(){document.getElementById('step-cel').classList.remove('open');renderQuestHome();}
+
+function pauseQuest(qid){
+  const quest=S.quests.find(q=>q.id===qid);if(!quest)return;
+  quest.status=quest.status==='paused'?'active':'paused';save();renderQuestHome();
+  showToast(quest.status==='paused'?'Quest paused — it waits for you':'Quest resumed ▶');
+}
+
+function abandonQuest(qid){
+  const quest=S.quests.find(q=>q.id===qid);if(!quest)return;
+  const confirmed=confirm(`Are you redirecting or done with "${quest.name}"?\n\nOK = Done with this quest\nCancel = Keep it`);
+  if(confirmed){S.quests=S.quests.filter(q=>q.id!==qid);save();renderQuestHome();showToast('Quest removed');}
+}
+
+// NEW QUEST MODAL
+function openNQ(){
+  document.getElementById('nq-templates').innerHTML=QUEST_TEMPLATES.map((t,i)=>`<div class="nq-temp" onclick="useTemplate(${i})"><div class="nq-t-icon">${t.icon}</div><div class="nq-t-info"><div class="nq-t-name">${t.name}</div><div class="nq-t-desc">${t.desc}</div></div></div>`).join('');
+  document.getElementById('nq-name').value='';
+  document.getElementById('nq-desc').value='';
+  document.getElementById('nq-overlay').classList.add('open');
+}
+function closeNQ(){document.getElementById('nq-overlay').classList.remove('open');}
+
+function useTemplate(idx){
+  const t=QUEST_TEMPLATES[idx];
+  if(t.custom){document.getElementById('nq-name').focus();closeNQ();openNQ();return;}
+  document.getElementById('nq-name').value=t.name;
+  document.getElementById('nq-desc').value=t.desc;
+}
+
+function createQuest(){
+  const name=document.getElementById('nq-name').value.trim();
+  const desc=document.getElementById('nq-desc').value.trim();
+  if(!name){showToast('Give your quest a name first',true);return;}
+  // Find matching template steps or start custom
+  const template=QUEST_TEMPLATES.find(t=>t.name===name&&!t.custom);
+  const steps=template?JSON.parse(JSON.stringify(template.steps)).map((s,i)=>({...s,id:'s'+Date.now()+i,done:false})):[];
+  const quest={
+    id:'q'+Date.now(),
+    name,desc,
+    icon:template?template.icon:'⬡',
+    steps,
+    status:'active',
+    createdAt:new Date().toISOString(),
+  };
+  S.quests.push(quest);save();
+  closeNQ();renderQuestHome();
+  showToast(`"${name}" quest started 🚀`,'','pu');
+}
+
+// ===== FULL TRACKER GRIDS =====
+function buildGrids(){
+  ['cost','build'].forEach(t=>{
+    const g=document.getElementById(t[0]+'grid');if(!g)return;g.innerHTML='';
+    (t==='cost'?S.cost:S.build).forEach(a=>{
+      const n=S.today[a.id]||0,on=n>0;
+      const btn=document.createElement('button');
+      btn.className='ab'+(on?t==='cost'?' co':' bo':'');
+      btn.innerHTML=`${a.isNew?'<span class="new-tag">NEW</span>':''}<span>${a.name}</span><span class="ap" style="color:${t==='cost'?'var(--rd)':'var(--gr)'}">${t==='cost'?'-':'+'}${a.pts} pts</span><span class="abg">${n}</span>`;
+      btn.onclick=()=>{S.today[a.id]=(S.today[a.id]||0)+1;save();buildGrids();calcScore();};
+      g.appendChild(btn);
+    });
+  });
+}
+
+// ===== COACH =====
+function buildCoach(){
+  const body=document.getElementById('coach-body');
+  if(!S.logs.length){body.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);padding:20px 0;text-align:center;line-height:1.8">Lock in at least one day to unlock your coach.</div>`;return;}
+  const last7=S.logs.slice(-7);
+  const avg=Math.round(last7.reduce((a,l)=>a+l.net,0)/last7.length);
+  const tally={};last7.forEach(l=>{S.cost.forEach(a=>{if(l.activities?.includes(a.name))tally[a.name]=(tally[a.name]||0)+1;});});
+  const topCost=Object.entries(tally).sort((a,b)=>b[1]-a[1])[0];
+  const bTally={};last7.forEach(l=>{S.build.forEach(a=>{if(l.activities?.includes(a.name))bTally[a.name]=(bTally[a.name]||0)+1;});});
+  const topBuild=S.build.reduce((a,b)=>a.pts>b.pts?a:b,S.build[0]);
+  const easyBuild=S.build.reduce((a,b)=>a.pts<b.pts?a:b,S.build[0]);
+  const unusedBuild=S.build.find(a=>!bTally[a.name]&&a.pts>8)||S.build.find(a=>!bTally[a.name])||S.build[1];
+  let read='',tags=[];
+  if(avg>=15){read=`Averaging +${avg} pts over ${last7.length} days — ${last7.filter(l=>l.net>0).length} surplus days. Your baseline is rising. The question is whether you sustain this.`;tags=['MOMENTUM','BUILDING','SURPLUS'];}
+  else if(avg>=0){read=`Staying in surplus — +${avg} avg. Maintaining but not yet accelerating. One consistent push shifts this.`;tags=['MAINTAINING','STABLE'];}
+  else if(avg>=-10){read=`Neutral territory — ${avg} avg. ${topCost?`"${topCost[0]}" showing up most as a drain.`:''} Not in a hole, not building yet.`;tags=['NEUTRAL','RECALIBRATE'];}
+  else{read=`Deficit pattern — ${avg} avg. ${topCost?`"${topCost[0]}" is your main drain.`:''} One good build tomorrow changes the direction.`;tags=['DEFICIT','REBUILD'];}
+  const tc={'MOMENTUM':'var(--gr)','BUILDING':'var(--gr)','SURPLUS':'var(--gr)','MAINTAINING':'var(--am)','STABLE':'var(--am)','NEUTRAL':'var(--am)','RECALIBRATE':'var(--am)','DEFICIT':'var(--rd)','REBUILD':'var(--rd)'};
+  const ic={hi:'var(--gr)',md:'var(--am)',lo:'var(--pu)'};const il={hi:'HIGH IMPACT',md:'MED IMPACT',lo:'LOW FRICTION'};
+  const moves=[];
+  if(avg<0&&easyBuild)moves.push({title:`Start small — ${easyBuild.name}`,actId:easyBuild.id,pts:easyBuild.pts,impact:'hi',why:`You're in deficit. Lowest-friction build — moves the needle without overwhelming you.`,effect:`+${easyBuild.pts} pts breaks the direction. One small build ends a deficit streak.`});
+  else if(topBuild)moves.push({title:topBuild.name,actId:topBuild.id,pts:topBuild.pts,impact:'hi',why:`You're in surplus. High-value builds compound most when your baseline is already up.`,effect:`+${topBuild.pts} pts on a surplus day creates momentum that shifts your default state.`});
+  if(unusedBuild&&unusedBuild.id!==moves[0]?.actId)moves.push({title:`Try — ${unusedBuild.name}`,actId:unusedBuild.id,pts:unusedBuild.pts,impact:'md',why:`Haven't logged this recently. Your brain responds stronger to builds it hasn't experienced in a while.`,effect:`Rotating builds prevents adaptation. A reward your brain hasn't had recently hits harder.`});
+  if(topCost){const rep=S.build.find(a=>a.id!==moves[0]?.actId&&a.id!==moves[1]?.actId)||S.build[S.build.length-1];if(rep)moves.push({title:`Swap one "${topCost[0].substring(0,18)}" session`,actId:rep.id,pts:rep.pts,impact:'lo',why:`"${topCost[0]}" is your most frequent cost trap. One substitution is all it takes.`,effect:`One swap per day builds a new pattern. Consistency over perfection.`});}
+  body.innerHTML=`<div style="background:linear-gradient(135deg,rgba(0,232,150,.06),rgba(157,127,255,.06));border:1px solid rgba(0,232,150,.15);border-radius:13px;padding:15px;margin-bottom:11px"><div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:7px">WHAT YOUR DATA SHOWS</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">${tags.map(t=>`<span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:100px;border:1px solid ${tc[t]||'var(--mu)'};color:${tc[t]||'var(--mu)'};background:${tc[t]||'var(--mu)'}22">${t}</span>`).join('')}</div><div style="font-size:14px;color:#b0b0d0;font-style:italic;line-height:1.7">${read}</div></div>
+  <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:9px">POSSIBLE NEXT MOVES — you decide</div>
+  ${moves.filter(Boolean).map(m=>`<div class="move-card ${m.impact}"><div class="move-top"><span class="move-tag" style="background:${ic[m.impact]}22;color:${ic[m.impact]}">${il[m.impact]}</span><span class="move-pts">+${m.pts} pts</span></div><div class="move-title">${m.title}</div><div class="move-why">${m.why}</div><div class="move-effect">${m.effect}</div><div class="move-actions"><button class="move-btn take" onclick="takeMission('${m.title.replace(/'/g,"\\'")}','${m.why.replace(/'/g,"\\'")}','${m.actId}',${m.pts},this)">→ TAKE THIS MOVE</button><button class="move-btn" onclick="skipMove(this)">SKIP</button></div></div>`).join('')}`;
+}
+
+// ===== DATA =====
+function buildData(){buildStats();buildChart();buildStreak();buildHistory();}
+function buildStats(){
+  const g=document.getElementById('statgrid');if(!S.logs.length){g.innerHTML='';return;}
+  const surplus=S.logs.filter(l=>l.net>0).length;
+  const avg=Math.round(S.logs.reduce((a,l)=>a+l.net,0)/S.logs.length);
+  let streak=0;for(let i=S.logs.length-1;i>=0;i--){if(S.logs[i].net>0)streak++;else break;}
+  const qDone=S.quests.filter(q=>q.status==='done').length;
+  g.innerHTML=[{v:surplus,l:'SURPLUS DAYS',c:'var(--gr)'},{v:(avg>=0?'+':'')+avg,l:'AVG NET/DAY',c:avg>=0?'var(--gr)':'var(--rd)'},{v:streak+'🔥',l:'STREAK',c:'var(--am)'},{v:qDone+'⬡',l:'QUESTS DONE',c:'var(--pu)'}].map(it=>`<div class="sc"><div class="sv2" style="color:${it.c}">${it.v}</div><div class="sk2">${it.l}</div></div>`).join('');
+}
+function buildChart(){
+  const logs=S.logs.slice(-30);const canvas=document.getElementById('chart');
+  const W=canvas.parentElement.clientWidth-30;canvas.width=W;canvas.height=140;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,140);
+  if(!logs.length){ctx.fillStyle='#4a4a6a';ctx.font="10px 'DM Mono'";ctx.fillText('No data yet — lock in your first day',10,70);return;}
+  const vals=logs.map(l=>l.net);const max=Math.max(...vals,1),min=Math.min(...vals,0);const range=(max-min)||1;
+  const pad={t:10,b:20,l:4,r:4};const h=140-pad.t-pad.b,w=W-pad.l-pad.r;const bw=Math.max(Math.floor(w/logs.length)-3,5);
+  const zY=pad.t+h-((0-min)/range)*h;
+  ctx.strokeStyle='#1a1a2e';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();ctx.setLineDash([]);
+  logs.forEach((e,i)=>{const x=pad.l+i*(w/logs.length)+(w/logs.length-bw)/2;const bh=Math.abs((e.net/range)*h);const y=e.net>=0?zY-bh:zY;ctx.fillStyle=e.net>0?'rgba(0,232,150,.65)':'rgba(255,61,90,.65)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,bw,Math.max(bh,2),2);else ctx.rect(x,y,bw,Math.max(bh,2));ctx.fill();});
+  ctx.fillStyle='#4a4a6a';ctx.font="8px 'DM Mono'";ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(logs.length/5));
+  logs.forEach((e,i)=>{if(i%step===0){const x=pad.l+i*(w/logs.length)+(w/logs.length)/2;const d=new Date(e.date);ctx.fillText((d.getMonth()+1)+'/'+(d.getDate()),x,138);}});
+}
+function buildStreak(){
+  const row=document.getElementById('strow');const last14=S.logs.slice(-14);
+  if(!last14.length){row.innerHTML='<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--mu)">No logs yet</span>';return;}
+  row.innerHTML=last14.map(log=>{const d=new Date(log.date);const cls=log.net>5?'G':log.net<-5?'R':'N';return`<div class="sd ${cls}"><span>${(d.getMonth()+1)}/${d.getDate()}</span><span>${log.net>0?'+':''}${log.net}</span></div>`;}).join('');
+}
+function buildHistory(){
+  const list=document.getElementById('hlist');const sorted=[...S.logs].reverse().slice(0,25);
+  if(!sorted.length){list.innerHTML='<p style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--mu);padding:10px 0">Your history will appear here</p>';return;}
+  list.innerHTML=sorted.map(log=>{const d=new Date(log.date);const ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});const c=log.net>0?'var(--gr)':log.net<0?'var(--rd)':'var(--am)';return`<div class="hi2"><div style="flex:1;min-width:0"><div class="hd">${ds}</div><div class="ha">${log.activities||'—'}</div>${log.note?`<div class="hn">"${log.note}"</div>`:''}</div><div class="hs" style="color:${c}">${log.net>0?'+':''}${log.net}</div></div>`;}).join('');
+}
+
+// ===== SETTINGS =====
+function saveApiKey(v){S.apiKey=v.trim();save();const s=document.getElementById('api-status');if(v.startsWith('sk-ant-')){s.style.color='var(--gr)';s.textContent='✓ KEY SAVED';}else if(v.length>0){s.style.color='var(--rd)';s.textContent='Should start with sk-ant-...';}else{s.textContent='';}}
+function buildEditor(){
+  const mk=(acts,type,edId,color)=>{const ed=document.getElementById(edId);ed.innerHTML='';acts.forEach((a,i)=>{const row=document.createElement('div');row.className='er';row.innerHTML=`${a.isNew?`<span class="new-tag" style="flex-shrink:0">NEW</span>`:''}<input type="text" value="${a.name}" onchange="editA('${type}',${i},'name',this.value)"/><input type="number" value="${a.pts}" min="1" max="30" style="color:${color}" onchange="editA('${type}',${i},'pts',+this.value)"/><button class="del-btn" onclick="delAct('${type}',${i})">×</button>`;ed.appendChild(row);});};
+  mk(S.cost,'cost','cost-editor','var(--rd)');mk(S.build,'build','build-editor','var(--gr)');
+  const p=S.profile||{};document.getElementById('profile-summary').innerHTML=`AGE: ${p.age||'—'}<br>BUDGET: <span style="color:var(--gr)">${S.budget}</span> pts/day<br>TOP BUILD: ${p.naturalHigh?p.naturalHigh.substring(0,35):'—'}<br>BIGGEST TRAP: ${p.biggestTrap?p.biggestTrap.substring(0,35):'—'}`;
+  applyToggles();
+}
+function editA(type,i,f,v){if(type==='cost')S.cost[i][f]=v;else S.build[i][f]=v;save();}
+function delAct(type,i){if(!confirm('Remove this activity?'))return;if(type==='cost')S.cost.splice(i,1);else S.build.splice(i,1);save();buildEditor();buildGrids();}
+function addAct(type){const n=document.getElementById(`new-${type}-name`),p=document.getElementById(`new-${type}-pts`);const name=n.value.trim(),pts=+p.value||10;if(!name){showToast('Enter a name first',true);return;}const act={id:(type==='cost'?'nc':'nb')+Date.now(),name,pts,isNew:true};if(type==='cost')S.cost.push(act);else S.build.push(act);n.value='';p.value=10;save();buildEditor();buildGrids();showToast(`"${name}" added ✓`);}
+function setBudget(v){S.budget=+v;document.getElementById('bdisplay').textContent=v;document.getElementById('h-budg').textContent=v;save();}
+function toggleSetting(key){if(!S.settings)S.settings={};S.settings[key]=!S.settings[key];save();applyToggles();renderQuestHomeStrip();}
+function applyToggles(){
+  if(!S.settings)S.settings={showAllSteps:false,showQuestStrip:true};
+  const ts=document.getElementById('toggle-steps');const tqs=document.getElementById('toggle-queststrip');
+  if(ts){ts.classList.toggle('on',!!S.settings.showAllSteps);}
+  if(tqs){tqs.classList.toggle('on',S.settings.showQuestStrip!==false);}
+}
+function resetAll(){if(confirm('Reset everything? Cannot be undone.')){localStorage.removeItem('nb_q');location.reload();}}
+
+// ===== WEEKLY CHECKIN =====
+const CKQ=[{q:"Stress level this week?",opts:["Very low","Normal","Higher than usual","Really high"]},{q:"Sleep been like?",opts:["Solid 7-8hrs","Okay","Inconsistent","Bad"]},{q:"New cost traps show up?",opts:["Nah, same ones","One new thing","A couple","Yeah it was rough"]},{q:"How honest were you logging?",opts:["Very honest","Pretty honest","Skipped some","Not really"]},{q:"Overall this week:",opts:["Building momentum","Maintaining","Sliding a bit","In a deficit"]}];
+function checkCKDue(){if(S.logs.length<7)return;if(!S.lastCheckin){triggerCheckin();return;}const days=Math.floor((Date.now()-new Date(S.lastCheckin).getTime())/864e5);if(days>=7)triggerCheckin();}
+let ciS=0,ciAnswers=[];
+function triggerCheckin(){ciS=0;ciAnswers=[];renderCK();document.getElementById('cko').classList.add('open');}
+function renderCK(){const c=document.getElementById('cksteps');if(ciS>=CKQ.length){finCK();return;}const q=CKQ[ciS];c.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:8px">${ciS+1}/${CKQ.length}</div><div class="ckq">${q.q}</div><div class="cko-opts">${q.opts.map((o,i)=>`<button class="cko-opt" onclick="pickCKAns(${i})">${o}</button>`).join('')}</div>`;}
+function pickCKAns(i){ciAnswers.push(CKQ[ciS].opts[i]);ciS++;renderCK();}
+function finCK(){S.lastCheckin=new Date().toISOString();const stress=ciAnswers[0]||'';if(stress==='Very low')S.budget=Math.min(S.budget+2,80);else if(stress==='Really high')S.budget=Math.max(S.budget-2,20);save();document.getElementById('cko').classList.remove('open');showToast('Recalibrated ✓');}
+
+// ===== NAV =====
+function goPage(name,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('on');btn.classList.add('on');
+  if(name==='home'){buildCheckinStrip();calcScore();renderMission();renderQuestHomeStrip();if(S.currentMode==='quest')renderQuestHome();}
+  if(name==='log')buildGrids();
+  if(name==='coach')buildCoach();
+  if(name==='data')buildData();
+  if(name==='settings'){buildEditor();document.getElementById('bslider').value=S.budget;document.getElementById('bdisplay').textContent=S.budget;if(S.apiKey)document.getElementById('api-key-input').value=S.apiKey;}
+}
+
+// ===== TOAST =====
+function showToast(msg,isErr,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':type==='pu'?' pu':'');setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ===== BOOT =====
+(function(){
+  const nav=document.querySelector('.nav');
+  if(!S.onboarded){nav.style.display='none';document.getElementById('onboard').classList.remove('hidden');startOB();}
+  else{document.getElementById('onboard').classList.add('hidden');nav.style.display='flex';document.getElementById('pg-home').classList.add('on');initApp();}
+})();
+</script>
+</body>
+</html>
